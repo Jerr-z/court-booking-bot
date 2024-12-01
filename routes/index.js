@@ -1,5 +1,6 @@
 import express from 'express'
-import puppeteerCluster from '../helpers/ConfiguredCluster';
+import puppeteerCluster from '../helpers/ConfiguredCluster.js';
+import bookUBCCourtsTask from '../tasks/ubc-tennis-task.js';
 
 
 var router = express.Router();
@@ -12,6 +13,7 @@ router.get('/', function(req, res, next) {
 
 router.get('/court', function(req, res) {
   // TODO validate data
-  clusterInstance.queue();
+  clusterInstance.queue(bookUBCCourtsTask, req.body);
 });
-module.exports = router;
+
+export default router;

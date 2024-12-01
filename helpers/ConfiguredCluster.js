@@ -1,9 +1,11 @@
 import { Cluster } from "puppeteer-cluster";
 import UserAgent from "user-agents";
 import puppeteer from 'puppeteer-extra';
+import AnonymizeUA from 'puppeteer-extra-plugin-anonymize-ua';
+import SteathPlugin from 'puppeteer-extra-plugin-stealth';
 
-puppeteer.use(require('puppeteer-extra-plugin-anonymize-ua')())
-puppeteer.use(require('puppeteer-extra-plugin-stealth')())
+puppeteer.use(AnonymizeUA())
+puppeteer.use(SteathPlugin())
 
 class PuppeteerCluster {
     constructor() {

@@ -1,4 +1,4 @@
-
+import 'dotenv/config'
 
 async function bookUBCCourtsTask({ page, data: {url, numOfPlayers, numOfHours, startTime} }) {
     await page.goto(url);
@@ -24,8 +24,8 @@ async function bookUBCCourtsTask({ page, data: {url, numOfPlayers, numOfHours, s
     const loginPageUrl = "https://portal.recreation.ubc.ca/index.php"
     if (page.url().startsWith(loginPageUrl)) {
         await page.locator('a[href="/sso/index.php"]').click();
-        await page.locator('#username').fill(CWL_USERNAME);
-        await page.locator('#password').fill(CWL_PASSWORD);
+        await page.locator('#username').fill(process.env.CWL_USERNAME);
+        await page.locator('#password').fill(process.env.CWL_PASSWORD);
         await page.locator('button').click();
     }
 
@@ -42,22 +42,20 @@ async function bookUBCCourtsTask({ page, data: {url, numOfPlayers, numOfHours, s
     } catch (error) {
         // add alternative payment method
         await page.locator("add-new-card").click();
-        await page.locator('[id*=credit-card-holder-name]').fill(CREDIT_CARD_HOLDER_NAME);
-        await page.locator('[id*=credit-card-number]').fill(CREDIT_CARD_NUMBER);
-        await page.select('[id*=expiry-month]', EXPIRY_MONTH);
-        await page.select('[id*=year]', EXPIRY_YEAR);
-        await page.locator('input[id*=cvv-number]').fill(CVV);
-        await page.locator('input[id*=street]').fill(STREET);
-        await page.locator('input[id*=city]').fill(CITY);
-        await page.select('[id*=country]', countryMap[COUNTRY]);
+        await page.locator('[id*=credit-card-holder-name]').fill(process.env.CREDIT_CARD_HOLDER_NAME);
+        await page.locator('[id*=credit-card-number]').fill(process.env.CREDIT_CARD_NUMBER);
+        await page.select('[id*=expiry-month]', process.env.EXPIRY_MONTH);
+        await page.select('[id*=year]', process.env.EXPIRY_YEAR);
+        await page.locator('input[id*=cvv-number]').fill(process.env.CVV);
+        await page.locator('input[id*=street]').fill(process.env.STREET);
+        await page.locator('input[id*=city]').fill(process.env.CITY);
+        await page.select('[id*=country]', countryMap[process.env.COUNTRY]);
         // how do you select province
-        
+        await page.locator(`[id*=state]:has-text(${process.env.STATE})`).click()
+        await page.locator('.zip').fill(process.env.ZIP_CODE)
     }
 
-    
-    
-    
-    await page.locator(".process-now").click();
+    //await page.locator(".process-now").click();
 }
 
 const countryMap = {
@@ -153,4 +151,4 @@ const countryMap = {
     "Virgin Islands, U.S.": "234"
 };
 
-export default bookUBCCourtsTask;
+export default bookUBCCourtsTask

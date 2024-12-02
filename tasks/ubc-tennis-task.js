@@ -1,29 +1,38 @@
 import 'dotenv/config'
+import {setTimeout} from "node:timers/promises";
 
 async function bookUBCCourtsTask({ page, data }) {
     console.log('Starting task')
     let {url, numOfPlayers, numOfHours, startTime} = data;
 
-    await page.goto(url);
+    await page.goto(url, { waitUntil: 'networkidle0' });
     console.log('arrived at ' + url);
-    // Entering number of hours 
-    await page.locator('.service-select').click();
+    // Wait for the dropdown button to appear, then click it
+    await page.waitForSelector('#facility-page-content > div.facility-selected-items.second-row > span > span', { visible: true });
+    await page.locator('#facility-page-content > div.facility-selected-items.second-row > span > span').click();
 
-    // Wait for the dropdown options to appear (adjust this selector if needed)
-    await page.waitForSelector('li:has-text("1 h")', { visible: true });
+    // Wait for the dropdown options to load
+    await page.waitForSelector('#service-duration-dropdown_listbox');
 
-    // Now select the option
-    await page.locator('li:has-text("1 h")').click();
-    console.log('selected #of hours');
+
+    // Select the option based on numOfHours
+    await page.locator(`#service-duration-dropdown_listbox > li:nth-child(${numOfHours})`).click();
+    console.log('selected # of hours');
+    await setTimeout(3000);
 
     // Entering number of attendees
-    await page.locator('#number-of-attendees').fill(`${numOfPlayers}`);
+    await page.locator('#facility-page-content > div.number-of-people-input > span > span > input.k-formatted-value.service-select.num-of-spots.small.border-require.k-input').fill(`${numOfPlayers}`);
     console.log('entered number of attendees');
 
+    // SUCCESSFUL SO FAR
+    // TODO parse timestring properly
     // Select timeslot with specified start time
-    const dateOptions = {hour: '2-digit', minute: '2-digit', hour12: true};
-    const timeString = startTime.toLocaleString('en-US', options);
-    await page.locator(`span[title^=${timeString}]:has-text("Book Now")`).click();
+    const dateObj = new Date(startTime)
+    const hour = dateObj.getUTCHours();
+    console.log(hour);
+    await page.waitForSelector(`.k-scheduler-content div > div span[title^=${hour}:00]:has-text("Book Now")`);
+    //await page.locator(`span[title^=${timeString}]:has-text("Book Now")`).click();
+    await page.locator(`.k-scheduler-content div > div span[title^=${hour}:00]:has-text("Book Now")`).click();
     console.log('Book now clicked')
 
     // Click Reserve Button

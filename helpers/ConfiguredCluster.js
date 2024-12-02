@@ -24,7 +24,7 @@ class PuppeteerCluster {
               '--disable-setuid-sandbox',
               '--disable-web-security',
               '--disable-features=IsolateOrigins,site-per-process',
-              `--user-agent=${userAgent}`
+              `--user-agent=${userAgent.toString()}`
             ]
         };
 

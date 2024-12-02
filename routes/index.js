@@ -17,8 +17,9 @@ router.get('/', function(req, res, next) {
 router.get('/court', function(req, res) {
   // TODO validate data
   console.log(req.body)
-  clusterInstance.execute(req.body, bookUBCCourtsTask).then(res.status(200).send()).catch(res.status(500).send());
-  console.log('Task executing')
+  clusterInstance.execute(req.body, bookUBCCourtsTask);
+  console.log('Task queued');
+  res.status(200).send();
 });
 
 export default router;

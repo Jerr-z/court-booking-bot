@@ -4,7 +4,10 @@ import bookUBCCourtsTask from '../tasks/ubc-tennis-task.js';
 
 
 var router = express.Router();
-let clusterInstance = puppeteerCluster.getInstance().cluster
+let clusterInstance;
+(async () => {
+    clusterInstance = await puppeteerCluster.getInstance();
+})();
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -13,7 +16,9 @@ router.get('/', function(req, res, next) {
 
 router.get('/court', function(req, res) {
   // TODO validate data
-  clusterInstance.queue(bookUBCCourtsTask, req.body);
+  console.log(req.body)
+  clusterInstance.execute(req.body, bookUBCCourtsTask).then(res.status(200).send()).catch(res.status(500).send());
+  console.log('Task executing')
 });
 
 export default router;

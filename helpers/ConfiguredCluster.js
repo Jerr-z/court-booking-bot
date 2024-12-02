@@ -37,7 +37,7 @@ class PuppeteerCluster {
                 puppeteerOptions
             }
         );
-
+        console.log('Cluster created')
         return cluster  
     }
 

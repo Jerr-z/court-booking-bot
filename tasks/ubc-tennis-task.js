@@ -1,20 +1,30 @@
 import 'dotenv/config'
 
-async function bookUBCCourtsTask({ page, data: {url, numOfPlayers, numOfHours, startTime} }) {
+async function bookUBCCourtsTask({ page, data }) {
+    console.log('Starting task')
+    let {url, numOfPlayers, numOfHours, startTime} = data;
+
     await page.goto(url);
-
+    console.log('arrived at ' + url);
     // Entering number of hours 
+    await page.locator('.service-select').click();
 
-    await page.locator('.k-dropdown.service-select').click();
-    await page.locator(`li:has-text(${numOfHours} h)`).click();
+    // Wait for the dropdown options to appear (adjust this selector if needed)
+    await page.waitForSelector('li:has-text("1 h")', { visible: true });
+
+    // Now select the option
+    await page.locator('li:has-text("1 h")').click();
+    console.log('selected #of hours');
 
     // Entering number of attendees
     await page.locator('#number-of-attendees').fill(`${numOfPlayers}`);
+    console.log('entered number of attendees');
 
     // Select timeslot with specified start time
     const dateOptions = {hour: '2-digit', minute: '2-digit', hour12: true};
     const timeString = startTime.toLocaleString('en-US', options);
     await page.locator(`span[title^=${timeString}]:has-text("Book Now")`).click();
+    console.log('Book now clicked')
 
     // Click Reserve Button
     await page.waitForSelector('.button-book');

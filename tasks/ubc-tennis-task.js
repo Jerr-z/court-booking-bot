@@ -53,6 +53,7 @@ async function bookUBCCourtsTask({ page, data }) {
         await page.locator('#username').fill(process.env.CWL_USERNAME);
         await page.locator('#password').fill(process.env.CWL_PASSWORD);
         await page.locator('button').click();
+        // TODO: click duo trust this device button, handle long wait times
     }
 
     // login successful
@@ -79,7 +80,7 @@ async function bookUBCCourtsTask({ page, data }) {
         await page.locator('input[id*=city]').fill(process.env.CITY);
         await page.select('[id*=country]', countryMap[process.env.COUNTRY]);
         // how do you select province
-        await page.locator(`[id*=state]:has-text(${process.env.STATE})`).click()
+        await page.locator(`[id*=state]:has-text(${process.env.STATE})`).click();
         await page.locator('.zip').fill(process.env.ZIP_CODE)
     }
 

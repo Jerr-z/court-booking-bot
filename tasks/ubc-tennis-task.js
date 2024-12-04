@@ -24,30 +24,39 @@ async function bookUBCCourtsTask({ page, data }) {
     await page.locator('#facility-page-content > div.number-of-people-input > span > span > input.k-formatted-value.service-select.num-of-spots.small.border-require.k-input').fill(`${numOfPlayers}`);
     console.log('entered number of attendees');
 
-    // SUCCESSFUL SO FAR
-    // TODO parse timestring properly
-    // Select timeslot with specified start time
-    const dateObj = new Date(startTime)
-    const hour = dateObj.getUTCHours();
-    console.log(hour);
-    await page.waitForSelector(`.k-scheduler-content div > div span[title^=${hour}:00]:has-text("Book Now")`);
-    //await page.locator(`span[title^=${timeString}]:has-text("Book Now")`).click();
-    await page.locator(`.k-scheduler-content div > div span[title^=${hour}:00]:has-text("Book Now")`).click();
-    console.log('Book now clicked')
 
+    // Select timeslot with specified start time
+    const dateObj = new Date(startTime);
+    const hour = dateObj.getUTCHours();
+    const hourString = (hour < 10 ? '0' : '') + `${hour}:00`;
+    console.log(hourString);
+
+    await page.waitForSelector(`::-p-xpath(//div[div[span[starts-with(@title, '${hourString}') and text()='Book Now']]])`);
+    console.log('Book Now grid found!');
+    //await page.locator(`span[title^=${timeString}]:has-text("Book Now")`).click();
+    await page.locator(`::-p-xpath(//div[div[span[starts-with(@title, '${hourString}') and text()='Book Now']]])`).click();
+    console.log("Book Now clicked");
+    
     // Click Reserve Button
     await page.waitForSelector('.button-book');
     await page.locator(".button-book").click();
+    console.log("Reserve clicked");
+
+    // wait for redirect  
+    await page.waitForNavigation({ waitUntil: 'networkidle0' });
 
     // CWL Login If needed
     const loginPageUrl = "https://portal.recreation.ubc.ca/index.php"
     if (page.url().startsWith(loginPageUrl)) {
+        console.log("redirected to cwl login page");
         await page.locator('a[href="/sso/index.php"]').click();
         await page.locator('#username').fill(process.env.CWL_USERNAME);
         await page.locator('#password').fill(process.env.CWL_PASSWORD);
         await page.locator('button').click();
     }
 
+    // login successful
+    await page.waitForSelector("a[title='Next']:has-text('Next')");
     await page.locator("a[title='Next']:has-text('Next')").click();
 
 

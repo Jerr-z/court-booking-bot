@@ -1,7 +1,11 @@
 import 'dotenv/config'
 import {setTimeout} from "node:timers/promises";
-
+import { TimeoutError } from 'puppeteer';
 async function bookUBCCourtsTask({ page, data }) {
+    page.on('console', (msg) => {
+        console.log('BROWSER LOG:', msg.text());
+    });
+
     console.log('Starting task')
     let {url, numOfPlayers, numOfHours, startTime} = data;
 
@@ -33,7 +37,6 @@ async function bookUBCCourtsTask({ page, data }) {
 
     await page.waitForSelector(`::-p-xpath(//div[div[span[starts-with(@title, '${hourString}') and text()='Book Now']]])`);
     console.log('Book Now grid found!');
-    //await page.locator(`span[title^=${timeString}]:has-text("Book Now")`).click();
     await page.locator(`::-p-xpath(//div[div[span[starts-with(@title, '${hourString}') and text()='Book Now']]])`).click();
     console.log("Book Now clicked");
     
@@ -53,36 +56,86 @@ async function bookUBCCourtsTask({ page, data }) {
         await page.locator('#username').fill(process.env.CWL_USERNAME);
         await page.locator('#password').fill(process.env.CWL_PASSWORD);
         await page.locator('button').click();
-        // TODO: click duo trust this device button, handle long wait times
+        console.log('Waiting for duo push');
+        await page.waitForFunction(
+            (selector)=>{
+                console.log(!document.querySelector(selector));
+                return !document.querySelector(selector);
+            }, 
+            {polling:'raf'},
+            '.device-icon'
+        );
+        console.log('Duo push completed');
+        await page.waitForNavigation({waitUntil: 'networkidle0'});
+        
+        try {
+            await page.waitForSelector('#trust-browser-button', {timeout: 2000});
+            await page.locator('#trust-browser-button').click();
+            console.log("Trust this browser button clicked");
+        } catch(e) {
+            console.log("No need to click browser button")
+        }
+
+        console.log('Login Successful, redirecting to payment process');
+        await page.waitForNavigation();
+
     }
 
-    // login successful
-    await page.waitForSelector("a[title='Next']:has-text('Next')");
-    await page.locator("a[title='Next']:has-text('Next')").click();
+    await setTimeout(20000);
 
+    const paymentUrl = 'https://ubc.perfectmind.com/24063/Menu/BookMe4EventParticipants';
+    if (page.url().startsWith(paymentUrl)) {
+        console.log('arrived at payment page');
+    }
+    
+    await page.waitForSelector('div.next-button-container');
+    console.log('Next Button is here')
+    await page.waitForFunction(() => {
+            if (!document.querySelector('div.next-button-container')) {
+                return false;
+            }
+            try {
+                document.querySelector('div.next-button-container').click();
+                return true;
+            } catch {
+                return false;
+            }
+        }, {polling: 'raf'}, null);
 
-    await page.locator("label:has-text('UBC Student')").click();
+    console.log("Selected payee name");
 
+    
+    await page.waitForSelector('.radio-item');
+
+    // if UBC student then use student price :)
+    if (page.$$('.radio-item').length > 1) {
+        console.log("UBC Student identified")
+        await page.locator('::-p-xpath(//label[contains(., "UBC Student")]/preceding-sibling::input)').click();
+    } else {
+        await page.locator('tr input[type="radio"]').click();
+    }
+
+    await setTimeout(1000);
     await page.locator("a[title='Add to Cart']").click();
 
     // use pre-existing payment method
-    try {
-        await page.locator(".payment-amounts").click();
-    } catch (error) {
-        // add alternative payment method
-        await page.locator("add-new-card").click();
-        await page.locator('[id*=credit-card-holder-name]').fill(process.env.CREDIT_CARD_HOLDER_NAME);
-        await page.locator('[id*=credit-card-number]').fill(process.env.CREDIT_CARD_NUMBER);
-        await page.select('[id*=expiry-month]', process.env.EXPIRY_MONTH);
-        await page.select('[id*=year]', process.env.EXPIRY_YEAR);
-        await page.locator('input[id*=cvv-number]').fill(process.env.CVV);
-        await page.locator('input[id*=street]').fill(process.env.STREET);
-        await page.locator('input[id*=city]').fill(process.env.CITY);
-        await page.select('[id*=country]', countryMap[process.env.COUNTRY]);
-        // how do you select province
-        await page.locator(`[id*=state]:has-text(${process.env.STATE})`).click();
-        await page.locator('.zip').fill(process.env.ZIP_CODE)
-    }
+    // try {
+    //     await page.locator(".payment-amounts").click();
+    // } catch (error) {
+    //     // add alternative payment method
+    //     await page.locator("add-new-card").click();
+    //     await page.locator('[id*=credit-card-holder-name]').fill(process.env.CREDIT_CARD_HOLDER_NAME);
+    //     await page.locator('[id*=credit-card-number]').fill(process.env.CREDIT_CARD_NUMBER);
+    //     await page.select('[id*=expiry-month]', process.env.EXPIRY_MONTH);
+    //     await page.select('[id*=year]', process.env.EXPIRY_YEAR);
+    //     await page.locator('input[id*=cvv-number]').fill(process.env.CVV);
+    //     await page.locator('input[id*=street]').fill(process.env.STREET);
+    //     await page.locator('input[id*=city]').fill(process.env.CITY);
+    //     await page.select('[id*=country]', countryMap[process.env.COUNTRY]);
+    //     // how do you select province
+    //     await page.locator(`[id*=state]:has-text(${process.env.STATE})`).click();
+    //     await page.locator('.zip').fill(process.env.ZIP_CODE)
+    // }
 
     //await page.locator(".process-now").click();
 }

@@ -1,12 +1,13 @@
 import 'dotenv/config'
 import {setTimeout} from "node:timers/promises";
 import { TimeoutError } from 'puppeteer';
-async function bookUBCCourtsTask({ page, data }) {
+
+export async function bookUBCCourtsTask({ page, data }) {
     page.on('console', (msg) => {
         console.log('BROWSER LOG:', msg.text());
     });
 
-    console.log('Starting task')
+    console.log('Starting task');
     let {url, numOfPlayers, numOfHours, startTime} = data;
 
     await page.goto(url, { waitUntil: 'networkidle0' });
@@ -31,7 +32,7 @@ async function bookUBCCourtsTask({ page, data }) {
 
     // Select timeslot with specified start time
     const dateObj = new Date(startTime);
-    const hour = dateObj.getUTCHours();
+    const hour = (dateObj.getUTCHours() + 24) % 12 || 12;
     const hourString = (hour < 10 ? '0' : '') + `${hour}:00`;
     console.log(hourString);
 
@@ -140,6 +141,34 @@ async function bookUBCCourtsTask({ page, data }) {
     //await page.locator(".process-now").click();
 }
 
+export async function getAllCourtUrlsTask({page, data}) {
+
+    const homePageUrl = 'https://ubc.perfectmind.com/24063/Clients/BookMe4FacilityList/List?widgetId=c7c36ee3-2494-4de2-b2cb-d50a86487656&calendarId=e65c1527-c4f8-4316-b6d6-3b174041f00e';
+
+    await page.goto(homePageUrl, { waitUntil: 'networkidle0' });
+
+    await page.waitForSelector('ul[aria-label="Page sizes drop down"]');
+    setTimeout(500);
+
+    const selectDisplayTwentyItems = () => { document.querySelectorAll('ul[aria-label="Page sizes drop down"] li')[3].click(); return true;};
+
+    await page.waitForFunction(selectDisplayTwentyItems, {}, null);
+
+    const getAllCourtUrls = async () => {
+        let buttons = document.querySelectorAll('.tablet-details-wrapper .pm-confirm-button');
+        console.log(`There are ${buttons.length} buttons`)
+        let urls = Array.from(buttons).map(val => val.href);
+        console.log(urls);
+        return urls;
+    }
+
+    let urls = await page.evaluate(getAllCourtUrls);
+    
+
+    data.urls = urls;
+    
+}
+
 const countryMap = {
     "Albania": "2",
     "Algeria": "3",
@@ -232,5 +261,3 @@ const countryMap = {
     "Virgin Islands, British": "233",
     "Virgin Islands, U.S.": "234"
 };
-
-export default bookUBCCourtsTask

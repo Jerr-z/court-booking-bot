@@ -1,6 +1,6 @@
 import express from 'express'
 import puppeteerCluster from '../helpers/ConfiguredCluster.js';
-import bookUBCCourtsTask from '../tasks/ubc-tennis-task.js';
+import { bookUBCCourtsTask, getAllCourtUrlsTask } from '../tasks/ubc-tennis-task.js';
 
 
 var router = express.Router();
@@ -19,6 +19,11 @@ router.get('/court', function(req, res) {
   console.log(req.body)
   clusterInstance.execute(req.body, bookUBCCourtsTask);
   console.log('Task queued');
+  res.status(200).send();
+});
+
+router.get('/getUrls', function(req, res) {
+  clusterInstance.execute(req.body, getAllCourtUrlsTask);
   res.status(200).send();
 });
 

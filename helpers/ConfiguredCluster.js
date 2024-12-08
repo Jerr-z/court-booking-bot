@@ -3,6 +3,7 @@ import UserAgent from "user-agents";
 import puppeteer from 'puppeteer-extra';
 import AnonymizeUA from 'puppeteer-extra-plugin-anonymize-ua';
 import SteathPlugin from 'puppeteer-extra-plugin-stealth';
+import 'dotenv/config'
 
 puppeteer.use(AnonymizeUA())
 puppeteer.use(SteathPlugin())

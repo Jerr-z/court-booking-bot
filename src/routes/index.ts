@@ -23,8 +23,7 @@ router.get('/court', function(req, res) {
 });
 
 router.get('/getUrls', function(req, res) {
-  clusterInstance.execute(req.body, getAllCourtUrlsTask);
-  res.status(200).send();
+  clusterInstance.execute(req.body, getAllCourtUrlsTask).then((urls) => {res.status(200).send(urls)});
 });
 
 export default router;

@@ -83,11 +83,11 @@ function onError(error) {
 /**
  * Event listener for HTTP server "listening" event.
  */
-
 function onListening() {
   const addr = server.address();
   const bind = typeof addr === 'string'
     ? 'pipe ' + addr
+      //@ts-ignore
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
 }

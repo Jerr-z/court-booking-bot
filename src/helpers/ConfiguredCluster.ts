@@ -9,6 +9,8 @@ puppeteer.use(AnonymizeUA())
 puppeteer.use(SteathPlugin())
 
 class PuppeteerCluster {
+    private readonly cluster: Promise<Cluster<any, any>>;
+
     constructor() {
         this.cluster = this.createCluster()
     }
@@ -33,7 +35,7 @@ class PuppeteerCluster {
             {
                 puppeteer: puppeteer,
                 concurrency: Cluster.CONCURRENCY_BROWSER,
-                maxConcurrency: parseInt(process.env.PARALLEL_TASKS) || 1,
+                maxConcurrency: parseInt(process.env.PARALLEL_TASKS || '') || 1,
                 timeout: 5 * 60 * 1000,
                 puppeteerOptions
             }

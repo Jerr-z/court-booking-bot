@@ -1,9 +1,10 @@
 import 'dotenv/config'
 import {setTimeout} from "node:timers/promises";
-import { TimeoutError } from 'puppeteer';
+import { ConsoleMessage } from 'puppeteer';
+import {BookUBCTennisTaskRequest} from "../model/ubc-tennis";
 
-export async function bookUBCCourtsTask({ page, data }) {
-    page.on('console', (msg) => {
+export async function bookUBCCourtsTask({ page, data } : BookUBCTennisTaskRequest) {
+    page.on('console', (msg: ConsoleMessage) => {
         console.log('BROWSER LOG:', msg.text());
     });
 
@@ -96,7 +97,10 @@ export async function bookUBCCourtsTask({ page, data }) {
                 return false;
             }
             try {
-                document.querySelector('div.next-button-container').click();
+                let nextButton = document.querySelector('div.next-button-container') as HTMLElement;
+                if (nextButton) {
+                    nextButton.click()
+                }
                 return true;
             } catch {
                 return false;
@@ -148,25 +152,29 @@ export async function getAllCourtUrlsTask({page, data}) {
     await page.goto(homePageUrl, { waitUntil: 'networkidle0' });
 
     await page.waitForSelector('ul[aria-label="Page sizes drop down"]');
-    setTimeout(500);
+    await setTimeout(500);
 
-    const selectDisplayTwentyItems = () => { document.querySelectorAll('ul[aria-label="Page sizes drop down"] li')[3].click(); return true;};
+    const selectDisplayTwentyItems = () => {
+        const paginationDropDown = document.querySelectorAll('ul[aria-label="Page sizes drop down"] li') as NodeListOf<HTMLElement>;
+        if (paginationDropDown != null && paginationDropDown.length > 3) {
+            paginationDropDown[3].click(); return true;
+        }
+
+    };
 
     await page.waitForFunction(selectDisplayTwentyItems, {}, null);
 
     const getAllCourtUrls = async () => {
-        let buttons = document.querySelectorAll('.tablet-details-wrapper .pm-confirm-button');
+        let buttons = document.querySelectorAll('.tablet-details-wrapper .pm-confirm-button') as NodeListOf<HTMLElement>;
         console.log(`There are ${buttons.length} buttons`)
-        let urls = Array.from(buttons).map(val => val.href);
+        let urls = Array.from(buttons).map(val => (val as HTMLAnchorElement).href);
         console.log(urls);
         return urls;
     }
 
     let urls = await page.evaluate(getAllCourtUrls);
-    
 
-    data.urls = urls;
-    
+    return urls;
 }
 
 const countryMap = {

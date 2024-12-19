@@ -6,7 +6,7 @@
     "build": "tsc --watch",
     "clean": "rm -rf ./dist",
     "start": "node ./dist/bin/www.js",
-    "dev": "tsc && nodemon --watch 'src/**/*.ts' --exec 'node --experimental-specifier-resolution=node' dist/bin/www.js"
+    "dev": "tsc; nodemon --watch 'src/**/*.ts' --exec 'node --experimental-specifier-resolution=node' dist/bin/www.js"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
@@ -15,6 +15,7 @@
     "express": "5.0.0",
     "http-errors": "~1.6.3",
     "jade": "~1.11.0",
+    "joi": "^17.13.3",
     "morgan": "~1.9.1",
     "puppeteer": "^23.10.0",
     "puppeteer-cluster": "^0.24.0",

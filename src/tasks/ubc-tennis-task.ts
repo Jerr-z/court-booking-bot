@@ -55,8 +55,8 @@ export async function bookUBCCourtsTask({ page, data } : BookUBCTennisTaskReques
     if (page.url().startsWith(loginPageUrl)) {
         console.log("redirected to cwl login page");
         await page.locator('a[href="/sso/index.php"]').click();
-        await page.locator('#username').fill(process.env.CWL_USERNAME);
-        await page.locator('#password').fill(process.env.CWL_PASSWORD);
+        await page.locator('#username').fill(process.env.CWL_USERNAME || '');
+        await page.locator('#password').fill(process.env.CWL_PASSWORD || '');
         await page.locator('button').click();
         console.log('Waiting for duo push');
         await page.waitForFunction(
@@ -79,17 +79,24 @@ export async function bookUBCCourtsTask({ page, data } : BookUBCTennisTaskReques
         }
 
         console.log('Login Successful, redirecting to payment process');
-        await page.waitForNavigation();
+        // await page.waitForNavigation();
 
     }
 
-    await setTimeout(20000);
-
     const paymentUrl = 'https://ubc.perfectmind.com/24063/Menu/BookMe4EventParticipants';
+    await page.waitForFunction(
+        () => {
+        const paymentUrl = 'https://ubc.perfectmind.com/24063/Menu/BookMe4EventParticipants';
+        console.log(document.location.href);
+        return document.location.href.includes(paymentUrl)},
+        { timeout:100000, polling: 1000 });
+
     if (page.url().startsWith(paymentUrl)) {
         console.log('arrived at payment page');
     }
-    
+
+    await setTimeout(5000)
+
     await page.waitForSelector('div.next-button-container');
     console.log('Next Button is here')
     await page.waitForFunction(() => {
@@ -113,7 +120,7 @@ export async function bookUBCCourtsTask({ page, data } : BookUBCTennisTaskReques
     await page.waitForSelector('.radio-item');
 
     // if UBC student then use student price :)
-    if (page.$$('.radio-item').length > 1) {
+    if ((await page.$$('.radio-item')).length > 1) {
         console.log("UBC Student identified")
         await page.locator('::-p-xpath(//label[contains(., "UBC Student")]/preceding-sibling::input)').click();
     } else {
@@ -141,7 +148,7 @@ export async function bookUBCCourtsTask({ page, data } : BookUBCTennisTaskReques
     //     await page.locator(`[id*=state]:has-text(${process.env.STATE})`).click();
     //     await page.locator('.zip').fill(process.env.ZIP_CODE)
     // }
-
+    //await setTimeout(1000)
     //await page.locator(".process-now").click();
 }
 

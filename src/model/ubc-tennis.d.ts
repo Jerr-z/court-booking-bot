@@ -1,4 +1,4 @@
-import type { Page } from '@puppeteer'
+import type { Page } from 'puppeteer'
 
 export type BookUBCTennisTaskRequest = {
     page: Page;

@@ -1,7 +1,10 @@
+// noinspection SpellCheckingInspection
+
 import 'dotenv/config'
 import {setTimeout} from "node:timers/promises";
-import { ConsoleMessage } from 'puppeteer';
+import {ConsoleMessage} from 'puppeteer';
 import {BookUBCTennisTaskRequest} from "../model/ubc-tennis";
+import {BrowserState, IndexedDBItems, LocalStorageItems, SessionStorageItems} from "../model/browser-state";
 
 export async function bookUBCCourtsTask({ page, data } : BookUBCTennisTaskRequest) {
     page.on('console', (msg: ConsoleMessage) => {
@@ -51,7 +54,7 @@ export async function bookUBCCourtsTask({ page, data } : BookUBCTennisTaskReques
     await page.waitForNavigation({ waitUntil: 'networkidle0' });
 
     // CWL Login If needed
-    const loginPageUrl = "https://portal.recreation.ubc.ca/index.php"
+    const loginPageUrl = "https://portal.recreation.ubc.ca/index.php?returnUrl=https"
     if (page.url().startsWith(loginPageUrl)) {
         console.log("redirected to cwl login page");
         await page.locator('a[href="/sso/index.php"]').click();
@@ -179,9 +182,38 @@ export async function getAllCourtUrlsTask({page, data}) {
         return urls;
     }
 
-    let urls = await page.evaluate(getAllCourtUrls);
+    return await page.evaluate(getAllCourtUrls);
+}
 
-    return urls;
+// login and returns browser state
+export async function loginTask({page, data}) {
+    const loginUrl = "https://portal.recreation.ubc.ca/index.php?returnUrl=https%3A%2F%2Fubc.perfectmind.com%2F24063%2FClients%2FBookMe4FacilityList%2FList%3FwidgetId%3Dc7c36ee3-2494-4de2-b2cb-d50a86487656%26calendarId%3De65c1527-c4f8-4316-b6d6-3b174041f00e"
+    await page.goto(loginUrl, { waitUntil: 'networkidle0' });
+    await page.locator('a[href="/sso/index.php"]').click();
+    await page.locator('#username').fill(process.env.CWL_USERNAME || '');
+    await page.locator('#password').fill(process.env.CWL_PASSWORD || '');
+    await page.locator('button').click();
+    console.log('Waiting for duo push');
+    await page.waitForFunction(
+        (selector)=>{
+            console.log(!document.querySelector(selector));
+            return !document.querySelector(selector);
+        },
+        {polling:'raf'},
+        '.device-icon'
+    );
+    console.log('Duo push completed');
+    await page.waitForNavigation({waitUntil: 'networkidle0'});
+
+    try {
+        await page.waitForSelector('#trust-browser-button', {timeout: 2000});
+        await page.locator('#trust-browser-button').click();
+        console.log("Trust this browser button clicked");
+    } catch(e) {
+        console.log("No need to click browser button")
+    }
+
+    console.log('Login Successful');
 }
 
 const countryMap = {

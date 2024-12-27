@@ -26,8 +26,8 @@ router.get('/court', async function(req, res) {
 
   console.log(validationResult.value)
   let triggerDelay = calculateSleepTime(new Date(validationResult.value.startTime))
-  setTimeout(() => clusterInstance.cluster?.execute(null, loginTask), triggerDelay - 60 * 1000)
-  setTimeout(() => clusterInstance.cluster?.execute(validationResult.value, bookUBCCourtsTask), triggerDelay - 300)
+  setTimeout(() => clusterInstance.getCluster()?.execute(null, loginTask), triggerDelay - 60 * 1000)
+  setTimeout(() => clusterInstance.getCluster()?.execute(validationResult.value, bookUBCCourtsTask), triggerDelay - 300)
   console.log(`Task queued, waking up in ${triggerDelay} ms`);
   res.status(200).send();
   await clusterInstance.cluster?.idle();
@@ -36,8 +36,9 @@ router.get('/court', async function(req, res) {
 
 router.get('/getUrls', async function(req, res) {
   let clusterInstance = new PuppeteerCluster();
-  await clusterInstance.init()
-  clusterInstance.cluster?.execute(req.body, getAllCourtUrlsTask).then((urls) => {res.status(200).send(urls)});
+  await clusterInstance.init();
+
+  clusterInstance.getCluster()?.execute(req.body, getAllCourtUrlsTask).then((urls) => {res.status(200).send(urls)});
   await clusterInstance.cluster?.idle();
   await clusterInstance.cluster?.close();
 });

@@ -9,13 +9,10 @@ puppeteer.use(AnonymizeUA())
 puppeteer.use(SteathPlugin())
 
 class PuppeteerCluster {
-    private readonly cluster: Promise<Cluster<any, any>>;
+    public cluster: Cluster | undefined;
+    constructor() {}
 
-    constructor() {
-        this.cluster = this.createCluster()
-    }
-
-    async createCluster() {
+    async init() {
         // TODO: maybe proxies in the future?
 
         const userAgent = new UserAgent()
@@ -23,30 +20,31 @@ class PuppeteerCluster {
             headless: false,
             defaultViewport: null,
             args: [
-              '--no-sandbox',
-              '--disable-setuid-sandbox',
-              '--disable-web-security',
-              '--disable-features=IsolateOrigins,site-per-process',
-              `--user-agent=${userAgent.toString()}`
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-web-security',
+                '--disable-features=IsolateOrigins,site-per-process',
+                `--user-agent=${userAgent.toString()}`
             ]
         };
 
-        let cluster = await Cluster.launch(
+        this.cluster = await Cluster.launch(
             {
                 puppeteer: puppeteer,
-                concurrency: Cluster.CONCURRENCY_BROWSER,
+                concurrency: Cluster.CONCURRENCY_PAGE,
                 maxConcurrency: parseInt(process.env.PARALLEL_TASKS || '') || 1,
                 timeout: 5 * 60 * 1000,
                 puppeteerOptions
             }
-        );
+        )
+
         console.log('Cluster created')
-        return cluster  
     }
 
-    getInstance() {
+    getCluster() {
         return this.cluster
     }
+
 }
 
-export default new PuppeteerCluster();
+export default PuppeteerCluster;

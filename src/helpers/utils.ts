@@ -1,7 +1,7 @@
 export function calculateSleepTime(until: Date) {
-    const targetHour = until.getHours() - 1;
-    const targetMinute = 59;
-    const targetSecond = 59;
+    const targetHour = until.getHours();
+    const targetMinute = 0;
+    const targetSecond = 0;
 
     const now = new Date()
     const currentHour = now.getHours();
